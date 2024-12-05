@@ -25,14 +25,6 @@ interface ImportStats {
   duplicate: number;
 }
 
-interface ImportedData {
-  type: string;
-  authors: string;
-  title: string;
-  year: string;
-  publisher?: string;
-}
-
 const ImportDialog: React.FC<ImportDialogProps> = ({ isOpen, onClose, onImport }) => {
   const [citations, setCitations] = useState<Partial<Citation>[]>([]);
   const [stats, setStats] = useState<ImportStats>({ total: 0, success: 0, failed: 0, duplicate: 0 });
