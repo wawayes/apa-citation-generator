@@ -111,15 +111,6 @@ const ImportDialog: React.FC<ImportDialogProps> = ({ isOpen, onClose, onImport }
     multiple: true
   });
 
-  const handleFileContent = (content: string) => {
-    try {
-      const data = JSON.parse(content) as ImportedData[];
-      // ... 其余代码保持不变
-    } catch (error) {
-      console.error('Failed to parse file:', error);
-    }
-  };
-
   return (
     <AnimatePresence>
       {isOpen && (
