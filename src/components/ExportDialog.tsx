@@ -48,7 +48,6 @@ const ExportDialog: React.FC<ExportDialogProps> = ({
     citationStyle: 'apa',
     dateFormat: 'full'
   });
-  const [showPreview, setShowPreview] = useState(false);
 
   const handleSelectAll = () => {
     setSelectedCitations(savedCitations.map(c => c.id));
@@ -155,12 +154,6 @@ const ExportDialog: React.FC<ExportDialogProps> = ({
 
             {/* Action Buttons */}
             <div className="flex justify-end space-x-2">
-              <button
-                onClick={() => setShowPreview(true)}
-                className="px-4 py-2 text-blue-600 hover:bg-blue-50 rounded"
-              >
-                Preview
-              </button>
               <button
                 onClick={handleExport}
                 disabled={selectedCitations.length === 0}

@@ -25,6 +25,14 @@ interface ImportStats {
   duplicate: number;
 }
 
+interface ImportedData {
+  type: string;
+  authors: string;
+  title: string;
+  year: string;
+  publisher?: string;
+}
+
 const ImportDialog: React.FC<ImportDialogProps> = ({ isOpen, onClose, onImport }) => {
   const [citations, setCitations] = useState<Partial<Citation>[]>([]);
   const [stats, setStats] = useState<ImportStats>({ total: 0, success: 0, failed: 0, duplicate: 0 });
@@ -79,9 +87,10 @@ const ImportDialog: React.FC<ImportDialogProps> = ({ isOpen, onClose, onImport }
         newStats.duplicate = validCitations.length - uniqueCitations.length;
         newCitations.push(...uniqueCitations);
 
-      } catch (error: any) {
+      } catch (error: unknown) {
         newStats.failed++;
-        setErrors(prev => [...prev, `Error processing ${file.name}: ${error.message}`]);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        setErrors(prev => [...prev, `Error processing ${file.name}: ${errorMessage}`]);
       }
     }
 
@@ -101,6 +110,15 @@ const ImportDialog: React.FC<ImportDialogProps> = ({ isOpen, onClose, onImport }
     },
     multiple: true
   });
+
+  const handleFileContent = (content: string) => {
+    try {
+      const data = JSON.parse(content) as ImportedData[];
+      // ... 其余代码保持不变
+    } catch (error) {
+      console.error('Failed to parse file:', error);
+    }
+  };
 
   return (
     <AnimatePresence>

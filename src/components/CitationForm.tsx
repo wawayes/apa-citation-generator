@@ -136,13 +136,10 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
     localStorage.getItem('citationAdditionalInfo') || ''
   );
   const [citation, setCitation] = useState('');
-  const [showCopySuccess, setShowCopySuccess] = useState(false);
-  const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [additionalFields, setAdditionalFields] = useState<Record<string, string>>({});
   const [apaVersion, setApaVersion] = useState(() => 
     localStorage.getItem('citationApaVersion') || '7'
   );
-  const [showExportHelp, setShowExportHelp] = useState(false);
   const [savedCitations, setSavedCitations] = useState<Citation[]>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('savedCitations');
@@ -151,7 +148,6 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
     return [];
   });
   const [selectedCitations, setSelectedCitations] = useState<string[]>([]);
-  const [showExportDialog, setShowExportDialog] = useState(false);
   const [showFormatDialog, setShowFormatDialog] = useState(false);
   const [duplicateMessage, setDuplicateMessage] = useState<string>('');
 
@@ -311,8 +307,7 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(citation).then(() => {
-      setShowCopySuccess(true);
-      setTimeout(() => setShowCopySuccess(false), 2000);
+      console.log('Citation copied to clipboard');
     });
   };
 
@@ -489,8 +484,8 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
       return updated;
     });
 
-    setShowSaveSuccess(true);
-    setTimeout(() => setShowSaveSuccess(false), 2000);
+    // 调用父组件的 onSave
+    onSave(citation);
   };
 
   const handleCitationSelect = (id: string, selected: boolean) => {
@@ -516,94 +511,6 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
     setSelectedCitations(prev => prev.filter(citationId => citationId !== id));
   };
 
-  const exportFormats = [
-    { 
-      value: 'bibtex', 
-      label: 'BibTeX', 
-      icon: '📄',
-      color: 'violet',
-      description: 'Standard format for LaTeX and academic publishing'
-    },
-    { 
-      value: 'csl-json', 
-      label: 'CSL JSON', 
-      icon: '🔄',
-      color: 'blue',
-      description: 'Compatible with Zotero, Mendeley, and other reference managers'
-    },
-    { 
-      value: 'endnote-xml', 
-      label: 'EndNote XML', 
-      icon: '📚',
-      color: 'green',
-      description: 'For use with EndNote reference management software'
-    },
-    { 
-      value: 'refworks', 
-      label: 'RefWorks', 
-      icon: '📋',
-      color: 'pink',
-      description: 'For RefWorks online reference management'
-    },
-    { 
-      value: 'zotero-rdf', 
-      label: 'Zotero RDF', 
-      icon: '📱',
-      color: 'purple',
-      description: 'Optimized for Zotero reference manager'
-    },
-    { 
-      value: 'mendeley-xml', 
-      label: 'Mendeley', 
-      icon: '📖',
-      color: 'red',
-      description: 'For Mendeley reference management'
-    },
-    { 
-      value: 'mods', 
-      label: 'MODS', 
-      icon: '🏛️',
-      color: 'yellow',
-      description: 'Library and digital repository standard'
-    },
-    { 
-      value: 'openoffice', 
-      label: 'OpenDocument', 
-      icon: '📝',
-      color: 'blue',
-      description: 'For LibreOffice and OpenOffice'
-    },
-    { 
-      value: 'json-ld', 
-      label: 'JSON-LD', 
-      icon: '🔗',
-      color: 'orange',
-      description: 'Linked Data format for semantic web'
-    },
-    { 
-      value: 'csv', 
-      label: 'CSV', 
-      icon: '📊',
-      color: 'green',
-      description: 'Spreadsheet-friendly format'
-    },
-    { 
-      value: 'html', 
-      label: 'HTML', 
-      icon: '🌐',
-      color: 'indigo',
-      description: 'Web-ready format with styling'
-    },
-    { 
-      value: 'ris', 
-      label: 'RIS', 
-      icon: '📑',
-      color: 'gray',
-      description: 'Universal citation format'
-    }
-  ] as const;
-
-  // 更新导出函数
   const handleExport = (format: CitationFormat) => {
     console.log('Exporting citations:', selectedCitations); // 添加日志
     const selectedItems = savedCitations.filter(
@@ -617,7 +524,7 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
 
     let content = '';
     let filename = `citations_${Date.now()}`;
-    let mimeType = 'text/plain';
+    const mimeType = 'text/plain';
 
     // 根据格式生成内容
     switch (format) {
@@ -648,28 +555,6 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
 
     // 导出完成后清除选择
     clearSelectedCitations();
-  };
-
-  // 获取每种格式的最佳使用场景
-  const getBestUseCase = (format: CitationFormat): string => {
-    switch (format) {
-      case 'bibtex':
-        return 'Academic writing with LaTeX, especially in mathematics and computer science';
-      case 'csl-json':
-        return 'Cross-platform reference management and sharing';
-      case 'endnote-xml':
-        return 'EndNote users and institutional repositories';
-      case 'ris':
-        return 'General purpose citation management and library systems';
-      case 'json-ld':
-        return 'Web applications and semantic web integration';
-      case 'csv':
-        return 'Data analysis and spreadsheet management';
-      case 'html':
-        return 'Web publishing and online documentation';
-      default:
-        return 'General purpose citation sharing';
-    }
   };
 
   return (
