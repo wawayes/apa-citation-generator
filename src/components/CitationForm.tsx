@@ -120,9 +120,12 @@ interface AdditionalFields {
 }
 
 const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
-  const [resourceType, setResourceType] = useState(() => 
-    localStorage.getItem('citationResourceType') || 'book'
-  );
+  const [resourceType, setResourceType] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('citationResourceType') || 'book';
+    }
+    return 'book';
+  });
   const [authors, setAuthors] = useState(() => 
     localStorage.getItem('citationAuthors') || ''
   );
@@ -137,9 +140,12 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
   );
   const [citation, setCitation] = useState('');
   const [additionalFields, setAdditionalFields] = useState<Record<string, string>>({});
-  const [apaVersion, setApaVersion] = useState(() => 
-    localStorage.getItem('citationApaVersion') || '7'
-  );
+  const [apaVersion, setApaVersion] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('citationApaVersion') || '7';
+    }
+    return '7';
+  });
   const [savedCitations, setSavedCitations] = useState<Citation[]>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('savedCitations');
