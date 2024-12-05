@@ -126,18 +126,30 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
     }
     return 'book';
   });
-  const [authors, setAuthors] = useState(() => 
-    localStorage.getItem('citationAuthors') || ''
-  );
-  const [title, setTitle] = useState(() => 
-    localStorage.getItem('citationTitle') || ''
-  );
-  const [year, setYear] = useState(() => 
-    localStorage.getItem('citationYear') || ''
-  );
-  const [additionalInfo, setAdditionalInfo] = useState(() => 
-    localStorage.getItem('citationAdditionalInfo') || ''
-  );
+  const [authors, setAuthors] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('citationAuthors') || '';
+    }
+    return '';
+  });
+  const [title, setTitle] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('citationTitle') || '';
+    }
+    return '';
+  });
+  const [year, setYear] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('citationYear') || '';
+    }
+    return '';
+  });
+  const [additionalInfo, setAdditionalInfo] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('citationAdditionalInfo') || '';
+    }
+    return '';
+  });
   const [citation, setCitation] = useState('');
   const [additionalFields, setAdditionalFields] = useState<Record<string, string>>({});
   const [apaVersion, setApaVersion] = useState(() => {
@@ -337,12 +349,15 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
     };
 
   useEffect(() => {
-    localStorage.setItem('citationResourceType', resourceType);
-    localStorage.setItem('citationAuthors', authors);
-    localStorage.setItem('citationTitle', title);
-    localStorage.setItem('citationYear', year);
-    localStorage.setItem('citationAdditionalInfo', additionalInfo);
-  }, [resourceType, authors, title, year, additionalInfo]);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('citationResourceType', resourceType);
+      localStorage.setItem('citationAuthors', authors);
+      localStorage.setItem('citationTitle', title);
+      localStorage.setItem('citationYear', year);
+      localStorage.setItem('citationAdditionalInfo', additionalInfo);
+      localStorage.setItem('citationApaVersion', apaVersion);
+    }
+  }, [resourceType, authors, title, year, additionalInfo, apaVersion]);
 
   const handleResourceTypeChange = (type: string) => {
     setResourceType(type);
