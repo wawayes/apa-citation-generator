@@ -11,7 +11,7 @@ import {
 import ExportFormatDialog from './ExportFormatDialog';
 
 interface CitationFormProps {
-  onSave: (citation: string) => void;
+  onSave: (citation: Citation) => void;
 }
 
 const resourceTypes = [
@@ -492,9 +492,7 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
     );
 
     if (isDuplicate) {
-      // 显示温和的提示信息
       setDuplicateMessage('This citation has already been saved');
-      // 3秒后自动清除提示
       setTimeout(() => setDuplicateMessage(''), 3000);
       return;
     }
@@ -505,8 +503,8 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
       return updated;
     });
 
-    // 调用父组件的 onSave
-    onSave(citation);
+    // 调用父组件的 onSave，传递 newCitation 而不是 citation 字符串
+    onSave(newCitation);
   };
 
   const handleCitationSelect = (id: string, selected: boolean) => {

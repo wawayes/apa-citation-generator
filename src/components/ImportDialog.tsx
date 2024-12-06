@@ -3,14 +3,15 @@ import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Citation } from '../utils/citationFormats';
 import {
-    parseBibTeXFile,
-    parseCSLJSONFile,
-    parseEndNoteXMLFile,
-    parseRISFile,
-    parseZoteroRDFFile,
-    removeDuplicates,
-    validateCitation
+  parseBibTeXFile,
+  parseCSLJSONFile,
+  parseEndNoteXMLFile,
+  parseRISFile,
+  parseZoteroRDFFile,
+  removeDuplicates,
+  validateCitation
 } from '../utils/importUtils';
+import LoadingSpinner from './LoadingSpinner';
 
 interface ImportDialogProps {
   isOpen: boolean;
@@ -145,7 +146,8 @@ const ImportDialog: React.FC<ImportDialogProps> = ({ isOpen, onClose, onImport }
             {/* 处理状态和统计 */}
             {isProcessing && (
               <div className="mt-4">
-                <div className="animate-pulse text-center">
+                <LoadingSpinner />
+                <div className="text-center mt-2">
                   正在处理文件...
                 </div>
               </div>
