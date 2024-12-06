@@ -1,14 +1,8 @@
 "use client";
 
-import { AnimatePresence, motion } from 'framer-motion';
-import React, { useEffect, useState } from 'react';
-import {
-    Citation,
-    CitationFormat,
-    toBibTeX,
-    toRIS
-} from '../utils/citationFormats';
-import ExportFormatDialog from './ExportFormatDialog';
+import React, { useState } from 'react';
+import { Citation } from '../utils/citationFormats';
+import ExportDialog from './ExportDialog';
 
 interface CitationFormProps {
   onSave: (citation: Citation) => void;
@@ -23,46 +17,11 @@ const resourceTypes = [
     example: 'Smith, J. D. (2024). The Complete Guide to Citations. Publisher Name.'
   },
   {
-    value: 'bookChapter',
-    label: 'Book Chapter',
-    icon: '📑',
-    description: 'For chapters in edited books',
-    example: 'Smith, J. D. (2024). Chapter Title. In E. Editor (Ed.), Book Title (pp. 100-120). Publisher.'
-  },
-  {
     value: 'journal',
     label: 'Journal Article',
     icon: '📰',
     description: 'For academic journal articles',
     example: 'Lee, B. R., & Wang, L. K. (2024). Modern Citation Practices. Journal Name, 12(3), 45-67.'
-  },
-  {
-    value: 'conference',
-    label: 'Conference Paper',
-    icon: '🎤',
-    description: 'For conference proceedings and presentations',
-    example: 'Smith, J. D. (2024, May). Paper Title. Paper presented at Conference Name, Location.'
-  },
-  {
-    value: 'thesis',
-    label: 'Thesis/Dissertation',
-    icon: '🎓',
-    description: 'For master\'s theses and doctoral dissertations',
-    example: 'Smith, J. D. (2024). Thesis Title [Doctoral dissertation, University Name].'
-  },
-  {
-    value: 'newspaper',
-    label: 'Newspaper Article',
-    icon: '📰',
-    description: 'For newspaper articles',
-    example: 'Smith, J. D. (2024, January 1). Article Title. Newspaper Name, p. A1.'
-  },
-  {
-    value: 'government',
-    label: 'Government Report',
-    icon: '🏛️',
-    description: 'For government documents and reports',
-    example: 'Agency Name. (2024). Report Title (Publication No. 123). Publisher.'
   },
   {
     value: 'website',
@@ -73,91 +32,25 @@ const resourceTypes = [
   }
 ];
 
-interface FieldInfo {
-  label: string;
-  placeholder: string;
-  example: string;
-  additionalFields?: {
-    name: string;
-    label: string;
-    placeholder: string;
-    example: string;
-  }[];
-}
-
-// APA 版本定义
-const apaVersions = [
-  {
-    value: '7',
-    label: 'APA 7th Edition',
-    description: 'Latest APA style guide (2024 Update)',
-  },
-  {
-    value: '6',
-    label: 'APA 6th Edition',
-    description: 'Legacy APA style guide (2010-2019)',
-  }
-];
-
-// 添加接口定义
 interface AdditionalFields {
   publisher?: string;
-  doi?: string;
-  url?: string;
-  city?: string;
   journalTitle?: string;
   volume?: string;
   issue?: string;
   pages?: string;
-  editor?: string;
-  bookTitle?: string;
-  conferenceName?: string;
-  presentationType?: string;
-  presentationDate?: string;
-  location?: string;
+  url?: string;
   siteName?: string;
-  publicationDate?: string;
 }
 
 const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
-  const [resourceType, setResourceType] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('citationResourceType') || 'book';
-    }
-    return 'book';
-  });
-  const [authors, setAuthors] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('citationAuthors') || '';
-    }
-    return '';
-  });
-  const [title, setTitle] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('citationTitle') || '';
-    }
-    return '';
-  });
-  const [year, setYear] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('citationYear') || '';
-    }
-    return '';
-  });
-  const [additionalInfo, setAdditionalInfo] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('citationAdditionalInfo') || '';
-    }
-    return '';
-  });
+  const [resourceType, setResourceType] = useState<string>('book');
+  const [authors, setAuthors] = useState('');
+  const [title, setTitle] = useState('');
+  const [year, setYear] = useState('');
   const [citation, setCitation] = useState('');
-  const [additionalFields, setAdditionalFields] = useState<Record<string, string>>({});
-  const [apaVersion, setApaVersion] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('citationApaVersion') || '7';
-    }
-    return '7';
-  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [additionalFields, setAdditionalFields] = useState<AdditionalFields>({});
+  const [showExportDialog, setShowExportDialog] = useState(false);
   const [savedCitations, setSavedCitations] = useState<Citation[]>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('savedCitations');
@@ -165,685 +58,474 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
     }
     return [];
   });
-  const [selectedCitations, setSelectedCitations] = useState<string[]>([]);
-  const [showFormatDialog, setShowFormatDialog] = useState(false);
-  const [duplicateMessage, setDuplicateMessage] = useState<string>('');
+  const [showNotification, setShowNotification] = useState(false);
+  const [notificationMessage, setNotificationMessage] = useState('');
 
-  const formatAuthors = (authors: string): string => {
-    return authors.trim().replace(/\.$/, ''); // 移除末尾的句点
+  const showToast = (message: string) => {
+    setNotificationMessage(message);
+    setShowNotification(true);
+    setTimeout(() => setShowNotification(false), 3000);
   };
 
-  // 使用 Unicode 斜体字符转换标题
-  const italicizeText = (text: string) => {
-    const italicMap: { [key: string]: string } = {
-      'A': '𝐴', 'B': '𝐵', 'C': '𝐶', 'D': '𝐷', 'E': '𝐸', 'F': '𝐹', 'G': '𝐺', 'H': '𝐻',
-      'I': '𝐼', 'J': '𝐽', 'K': '𝐾', 'L': '𝐿', 'M': '𝑀', 'N': '𝑁', 'O': '𝑂', 'P': '𝑃',
-      'Q': '𝑄', 'R': '𝑅', 'S': '𝑆', 'T': '𝑇', 'U': '𝑈', 'V': '𝑉', 'W': '𝑊', 'X': '𝑋',
-      'Y': '𝑌', 'Z': '𝑍',
-      'a': '𝑎', 'b': '𝑏', 'c': '𝑐', 'd': '𝑑', 'e': '𝑒', 'f': '𝑓', 'g': '𝑔', 'h': '𝘩',
-      'i': '𝑖', 'j': '𝑗', 'k': '𝑘', 'l': '𝑙', 'm': '𝑚', 'n': '𝑛', 'o': '𝑜', 'p': '𝑝',
-      'q': '𝑞', 'r': '𝑟', 's': '𝑠', 't': '𝑡', 'u': '𝑢', 'v': '𝑣', 'w': '𝑤', 'x': '𝑥',
-      'y': '𝑦', 'z': '𝑧'
-    };
-    return text.split('').map(char => italicMap[char] || char).join('');
-  };
-  
-  // 根据 APA 版本生成引用
-  const generateCitation = (e?: React.FormEvent) => {
-    console.log('generateCitation called with event:', e);
-    if (e) {
-      e.preventDefault();
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!authors.trim()) {
+      newErrors.authors = 'Authors are required';
     }
-    
-    console.log('Current form state:', {
-      resourceType,
-      authors,
-      title,
-      year,
-      additionalInfo,
-      additionalFields
-    });
-
-    if (!validateForm()) {
-      console.log('Form validation failed');
-      return;
+    if (!title.trim()) {
+      newErrors.title = 'Title is required';
     }
-    
-    const formattedAuthors = formatAuthors(authors);
-    let apaCitation = '';
-    
-    if (apaVersion === '7') {
-      // APA 7th Edition (2024 更新)
-      switch (resourceType) {
-        case 'book': {
-          const bookTitleItalic = italicizeText(title);
-          const bookInfo: AdditionalFields = {
-            publisher: additionalInfo,
-            ...additionalFields
-          };
-          
-          // 基本格式：Author. (Year). Title. Publisher.
-          // 如果是电子书，需要添加 DOI 或 URL
-          const doi = bookInfo.doi ? ` https://doi.org/${bookInfo.doi}` : '';
-          const url = bookInfo.url && !bookInfo.doi ? ` ${bookInfo.url}` : '';
-          
-          apaCitation = `${formattedAuthors}. (${year}). ${bookTitleItalic}. ${bookInfo.publisher}${doi}${url}`;
-          break;
-        }
-        
-        case 'bookChapter': {
-          const chapterInfo = additionalFields;
-          const bookTitleItalic = chapterInfo.bookTitle ? italicizeText(chapterInfo.bookTitle) : '';
-          
-          // 基本格式：Author. (Year). Chapter title. In Editor(s) (Ed./Eds.), Book title (pp. xx-xx). Publisher.
-          const editorSuffix = chapterInfo.editor?.includes('&') || chapterInfo.editor?.includes(',') ? 'Eds.' : 'Ed.';
-          const pages = chapterInfo.pages ? `(pp. ${chapterInfo.pages})` : '';
-          const doi = chapterInfo.doi ? ` https://doi.org/${chapterInfo.doi}` : '';
-          
-          apaCitation = `${formattedAuthors}. (${year}). ${title}. In ${chapterInfo.editor ? `${chapterInfo.editor} (${editorSuffix}), ` : ''}${bookTitleItalic} ${pages}. ${chapterInfo.publisher}${doi}`;
-          break;
-        }
-        
-        case 'journal': {
-          const journalInfo = additionalFields;
-          const journalTitleItalic = italicizeText(journalInfo.journalTitle || '');
-          
-          // 基本格式：Author. (Year). Title. Journal Name, Volume(Issue), pp-pp. https://doi.org/xxx
-          const volume = journalInfo.volume ? `, ${journalInfo.volume}` : '';
-          const issue = journalInfo.issue ? `(${journalInfo.issue})` : '';
-          const pages = journalInfo.pages ? `, ${journalInfo.pages}` : '';
-          const doi = journalInfo.doi ? ` https://doi.org/${journalInfo.doi}` : '';
-          
-          apaCitation = `${formattedAuthors}. (${year}). ${title}. ${journalTitleItalic}${volume}${issue}${pages}${doi}`;
-          break;
-        }
-        
-        case 'website': {
-          const webInfo = additionalFields;
-          const siteName = webInfo.siteName ? italicizeText(webInfo.siteName) : '';
-          
-          // 基本格式：Author. (Year, Month Day). Title. Site Name. URL
-          const date = webInfo.publicationDate ? `, ${webInfo.publicationDate}` : '';
-          const siteNamePart = siteName ? `. ${siteName}` : '';
-          
-          apaCitation = `${formattedAuthors}. (${year}${date}). ${title}${siteNamePart}. ${webInfo.url}`;
-          break;
-        }
-        
-        case 'conference': {
-          const confInfo = additionalFields;
-          const confNameItalic = italicizeText(confInfo.conferenceName || '');
-          
-          // 基本格式：Author. (Year, Month Day). Title [Type of contribution]. Conference Name, Location. DOI/URL
-          const presentationType = confInfo.presentationType || 'Paper presentation';
-          const date = confInfo.presentationDate ? `, ${confInfo.presentationDate}` : '';
-          const location = confInfo.location?.toLowerCase().includes('online') 
-            ? '[Virtual]'
-            : confInfo.location ? `, ${confInfo.location}` : '';
-          const doi = confInfo.doi ? ` https://doi.org/${confInfo.doi}` : '';
-          const url = confInfo.url && !confInfo.doi ? ` ${confInfo.url}` : '';
-          
-          apaCitation = `${formattedAuthors}. (${year}${date}). ${title} [${presentationType}]. ${confNameItalic}${location}${doi}${url}`;
-          break;
-        }
-      }
-    } else {
-      // APA 6th Edition (最终版本)
-      switch (resourceType) {
-        case 'book': {
-          const bookTitleItalicApa6 = italicizeText(title);
-          const bookInfo = additionalFields;
-          apaCitation = `${formattedAuthors}. (${year}). ${bookTitleItalicApa6}. ${bookInfo.city}: ${bookInfo.publisher}.`;
-          break;
-        }
-        case 'bookChapter': {
-          const chapterInfo = additionalFields;
-          const chapterBookTitleItalicApa6 = chapterInfo.bookTitle ? italicizeText(chapterInfo.bookTitle) : '';
-          apaCitation = `${formattedAuthors}. (${year}). ${title}. In ${chapterInfo.editor || ''} (Ed.), ${chapterBookTitleItalicApa6} (pp. ${chapterInfo.pages || ''}). ${chapterInfo.city || ''}: ${chapterInfo.publisher || ''}.`;
-          break;
-        }
-        case 'journal':
-          // DOI 在第6版中的显示方式不同
-          const { doi } = additionalFields;
-          apaCitation = `${formattedAuthors}. (${year}). ${title}. ${additionalInfo}. ${doi ? `doi:${doi}` : ''}`;
-          break;
-        case 'website':
-          // 第6版需要包含 "Retrieved from"
-          apaCitation = `${formattedAuthors}. (${year}). ${title}. Retrieved from ${additionalInfo}`;
-          break;
-        case 'newspaper':
-          const { section, page } = additionalFields;
-          const newspaperTitle = italicizeText(additionalInfo);
-          apaCitation = `${formattedAuthors}. (${year}, ${section || ''}). ${title}. ${newspaperTitle}${page ? `, p. ${page}` : ''}.`;
-          break;
-      }
+    if (!year.trim()) {
+      newErrors.year = 'Year is required';
+    } else if (!/^\d{4}$/.test(year)) {
+      newErrors.year = 'Please enter a valid year';
     }
-    
-    console.log('Generated citation:', apaCitation);
-    setCitation(apaCitation);
-  };
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(citation).then(() => {
-      console.log('Citation copied to clipboard');
-    });
-  };
-
-  const [errors, setErrors] = useState<string[]>([]);
-
-    const validateForm = () => {
-    const newErrors: string[] = [];
-
-    if (!authors) newErrors.push('Authors are required');
-    if (!title) newErrors.push('Title is required');
-    if (!year) newErrors.push('Year is required');
-    
-    if (resourceType === 'book') {
-      if (!additionalInfo) {
-        newErrors.push('Publisher is required');
+    if (resourceType === 'journal') {
+      if (!additionalFields.journalTitle?.trim()) {
+        newErrors.journalTitle = 'Journal title is required';
       }
     }
 
     setErrors(newErrors);
-    return newErrors.length === 0;
-    };
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('citationResourceType', resourceType);
-      localStorage.setItem('citationAuthors', authors);
-      localStorage.setItem('citationTitle', title);
-      localStorage.setItem('citationYear', year);
-      localStorage.setItem('citationAdditionalInfo', additionalInfo);
-      localStorage.setItem('citationApaVersion', apaVersion);
-    }
-  }, [resourceType, authors, title, year, additionalInfo, apaVersion]);
-
-  const handleResourceTypeChange = (type: string) => {
-    setResourceType(type);
+    return Object.keys(newErrors).length === 0;
   };
 
-  // 添加一个函数来获取额外字段的标签和提示
-  const getAdditionalFieldInfo = (): FieldInfo => {
-    const defaultInfo: FieldInfo = {
-      label: 'Additional Information',
-      placeholder: 'Enter details',
-      example: 'Example information'
-    };
+  const formatAuthors = (authors: string): string => {
+    const authorList = authors.split(/,\s*&\s*|\s*,\s*/).map(author => author.trim());
+    
+    if (authorList.length > 3) {
+      return `${authorList[0]} et al.`;
+    }
+    
+    if (authorList.length > 1) {
+      const lastAuthor = authorList.pop();
+      return `${authorList.join(', ')}, & ${lastAuthor}`;
+    }
+    
+    return authorList[0];
+  };
+
+  const generateCitation = (event: React.FormEvent) => {
+    event.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    let apaCitation = '';
+    const formattedAuthors = formatAuthors(authors);
 
     switch (resourceType) {
       case 'book':
-        return {
-          label: 'Publisher',
-          placeholder: 'Publisher Name',
-          example: 'Oxford University Press'
-        };
-      case 'bookChapter':
-        return {
-          label: 'Book Information',
-          placeholder: 'Editor(s), Book Title, Page Range',
-          example: 'E. Editor (Ed.), Book Title (pp. 100-120)',
-          additionalFields: [
-            {
-              name: 'editor',
-              label: 'Editor(s)',
-              placeholder: 'E. Editor',
-              example: 'Last, F. M.'
-            },
-            {
-              name: 'bookTitle',
-              label: 'Book Title',
-              placeholder: 'Complete Book Title',
-              example: 'The Complete Guide'
-            },
-            {
-              name: 'pages',
-              label: 'Page Range',
-              placeholder: 'pp. 100-120',
-              example: 'pp. 100-120'
-            },
-            {
-              name: 'publisher',
-              label: 'Publisher',
-              placeholder: 'Publisher Name',
-              example: 'Academic Press'
-            }
-          ]
-        };
-      case 'conference':
-        return {
-          label: 'Conference Details',
-          placeholder: 'Conference Name, Location',
-          example: 'International Conference on..., City, Country',
-          additionalFields: [
-            {
-              name: 'conferenceName',
-              label: 'Conference Name',
-              placeholder: 'Full Conference Name',
-              example: 'Annual Meeting of...'
-            },
-            {
-              name: 'location',
-              label: 'Location',
-              placeholder: 'City, Country',
-              example: 'London, UK'
-            },
-            {
-              name: 'presentationDate',
-              label: 'Presentation Date',
-              placeholder: 'Month Day',
-              example: 'May 15'
-            }
-          ]
-        };
+        apaCitation = `${formattedAuthors} (${year}). ${title}${additionalFields.publisher ? `. ${additionalFields.publisher}` : ''}`;
+        break;
       case 'journal':
-        return {
-          label: 'Journal Details',
-          placeholder: 'Journal Name, Volume(Issue), Pages',
-          example: 'Nature, 123(4), 45-67'
-        };
+        apaCitation = `${formattedAuthors} (${year}). ${title}. ${additionalFields.journalTitle}`;
+        if (additionalFields.volume) {
+          apaCitation += `, ${additionalFields.volume}`;
+          if (additionalFields.issue) {
+            apaCitation += `(${additionalFields.issue})`;
+          }
+        }
+        if (additionalFields.pages) {
+          apaCitation += `, ${additionalFields.pages}`;
+        }
+        apaCitation += '.';
+        break;
       case 'website':
-        return {
-          label: 'URL',
-          placeholder: 'https://example.com/article',
-          example: 'Full URL of the webpage'
-        };
-      case 'newspaper':
-        return {
-          label: 'Newspaper Name',
-          placeholder: 'Enter newspaper name',
-          example: 'The New York Times',
-          additionalFields: [
-            {
-              name: 'section',
-              label: 'Publication Date',
-              placeholder: 'Month Day',
-              example: 'January 1'
-            },
-            {
-              name: 'page',
-              label: 'Page Number',
-              placeholder: 'A1',
-              example: 'A1'
-            }
-          ]
-        };
+        apaCitation = `${formattedAuthors} (${year}). ${title}`;
+        if (additionalFields.siteName) {
+          apaCitation += `. ${additionalFields.siteName}`;
+        }
+        if (additionalFields.url) {
+          apaCitation += `. ${additionalFields.url}`;
+        }
+        break;
       default:
-        return defaultInfo;
+        apaCitation = `${formattedAuthors} (${year}). ${title}.`;
+    }
+
+    setCitation(apaCitation);
+  };
+
+  const copyToClipboard = async () => {
+    if (citation) {
+      try {
+        await navigator.clipboard.writeText(citation);
+        showToast('Citation copied to clipboard');
+      } catch (error) {
+        console.error('Failed to copy citation:', error);
+        showToast('Failed to copy. Please copy manually');
+      }
     }
   };
 
   const handleSave = () => {
-    if (!citation) return;
-
-    const newCitation: Citation = {
-      id: Date.now().toString(),
-      type: resourceType,
-      authors,
-      title,
-      year,
-      text: citation,
-      createdAt: new Date()
-    };
-
-    // 检查是否已存在相同的引用
-    const isDuplicate = savedCitations.some(
-      saved => saved.text === citation
-    );
-
-    if (isDuplicate) {
-      setDuplicateMessage('This citation has already been saved');
-      setTimeout(() => setDuplicateMessage(''), 3000);
-      return;
-    }
-
-    setSavedCitations(prev => {
-      const updated = [...prev, newCitation];
-      localStorage.setItem('savedCitations', JSON.stringify(updated));
-      return updated;
-    });
-
-    // 调用父组件的 onSave，传递 newCitation 而不是 citation 字符串
-    onSave(newCitation);
-  };
-
-  const handleCitationSelect = (id: string, selected: boolean) => {
-    console.log('Selecting citation:', id, selected); // 添加日志
-    if (selected) {
-      setSelectedCitations(prev => [...prev, id]);
-    } else {
-      setSelectedCitations(prev => prev.filter(citationId => citationId !== id));
+    if (citation) {
+      const newCitation: Citation = {
+        id: Date.now().toString(),
+        type: resourceType,
+        authors,
+        title,
+        year,
+        text: citation,
+        createdAt: new Date(),
+      };
+      
+      const updatedCitations = [...savedCitations, newCitation];
+      setSavedCitations(updatedCitations);
+      localStorage.setItem('savedCitations', JSON.stringify(updatedCitations));
+      
+      // Clear form
+      setAuthors('');
+      setTitle('');
+      setYear('');
+      setCitation('');
+      setAdditionalFields({});
     }
   };
 
-  // 添加一个清除选择的函数
-  const clearSelectedCitations = () => {
-    setSelectedCitations([]);
+  const handleCopySavedCitation = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      showToast('Citation copied to clipboard');
+    } catch (error) {
+      console.error('Failed to copy citation:', error);
+      showToast('Failed to copy. Please copy manually');
+    }
   };
 
   const handleDeleteCitation = (id: string) => {
-    setSavedCitations(prev => {
-      const updated = prev.filter(citation => citation.id !== id);
-      localStorage.setItem('savedCitations', JSON.stringify(updated));
-      return updated;
-    });
-    setSelectedCitations(prev => prev.filter(citationId => citationId !== id));
-  };
-
-  const handleExport = (format: CitationFormat) => {
-    console.log('Exporting citations:', selectedCitations); // 添加日志
-    const selectedItems = savedCitations.filter(
-      citation => selectedCitations.includes(citation.id)
-    );
-
-    if (selectedItems.length === 0) {
-      alert('Please select at least one citation to export.');
-      return;
-    }
-
-    let content = '';
-    let filename = `citations_${Date.now()}`;
-    const mimeType = 'text/plain';
-
-    // 根据格式生成内容
-    switch (format) {
-      case 'bibtex':
-        content = selectedItems.map(citation => toBibTeX(citation)).join('\n\n');
-        filename += '.bib';
-        break;
-      case 'ris':
-        content = selectedItems.map(citation => toRIS(citation)).join('\n\n');
-        filename += '.ris';
-        break;
-      // ... 其他格式处理
-      default:
-        content = selectedItems.map(citation => citation.text).join('\n\n');
-        filename += '.txt';
-    }
-
-    // 创建并触发下载
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-
-    // 导出完成后清除选择
-    clearSelectedCitations();
+    const updatedCitations = savedCitations.filter(citation => citation.id !== id);
+    setSavedCitations(updatedCitations);
+    localStorage.setItem('savedCitations', JSON.stringify(updatedCitations));
+    showToast('Citation deleted');
   };
 
   return (
-    <div className="space-y-8">
-      {/* Resource Type Selection */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {resourceTypes.map((type) => (
-          <motion.button
-            key={type.value}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => handleResourceTypeChange(type.value)}
-            className={`p-6 rounded-xl border-2 text-left transition-all ${
-              resourceType === type.value
-                ? 'border-blue-500 bg-blue-50'
-                : 'border-gray-200 hover:border-blue-200'
-            }`}
-          >
-            <div className="text-3xl mb-3">{type.icon}</div>
-            <h3 className="font-semibold text-lg mb-1 text-gray-900">{type.label}</h3>
-            <p className="text-sm text-gray-700">{type.description}</p>
-          </motion.button>
-        ))}
-      </div>
-
-      {/* APA Version Selection */}
-      <div className="bg-white rounded-xl shadow-sm p-6">
-        <h3 className="font-medium text-gray-900 mb-4">APA Version</h3>
-        <div className="grid grid-cols-2 gap-4">
-          {apaVersions.map((version) => (
-            <button
-              key={version.value}
-              type="button"
-              onClick={() => setApaVersion(version.value)}
-              className={`p-4 rounded-lg border-2 text-left transition-all ${
-                apaVersion === version.value
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-blue-200'
-              }`}
-            >
-              <h4 className="font-medium text-gray-900">{version.label}</h4>
-              <p className="text-sm text-gray-700">{version.description}</p>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Citation Form */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white rounded-xl shadow-sm p-6"
+    <div className="space-y-8 relative">
+      {/* Notification Toast */}
+      <div
+        className={`fixed left-1/2 bottom-4 transform -translate-x-1/2 transition-all duration-300 ease-in-out ${
+          showNotification ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+        }`}
       >
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="font-medium text-gray-900">Citation Details</h3>
+        <div className="bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2">
+          <span className="text-green-400">✓</span>
+          <span>{notificationMessage}</span>
+        </div>
+      </div>
+      
+      <form className="space-y-8" onSubmit={generateCitation}>
+        {/* Resource Type */}
+        <div className="space-y-4">
+          <label className="block text-lg font-semibold text-gray-700 mb-2">
+            Resource Type
+          </label>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {resourceTypes.map((type) => (
+              <button
+                key={type.value}
+                type="button"
+                onClick={() => setResourceType(type.value)}
+                className={`p-4 rounded-xl border-2 transition-all duration-300 flex flex-col items-center justify-center gap-2 hover:border-indigo-400 ${
+                  resourceType === type.value
+                    ? 'border-indigo-500 bg-indigo-50 shadow-md'
+                    : 'border-gray-200 bg-white'
+                }`}
+              >
+                <span className="text-2xl">{type.icon}</span>
+                <span className="font-medium text-gray-900">{type.label}</span>
+                <span className="text-xs text-gray-500 text-center">{type.description}</span>
+              </button>
+            ))}
+          </div>
         </div>
 
-        <form onSubmit={generateCitation} className="space-y-6">
-          <div className="space-y-4">
-            <h3>Basic Information</h3>
-            <div>
-              <label>Authors</label>
-              <input
-                type="text"
-                placeholder="Enter authors"
-                value={authors}
-                onChange={(e) => setAuthors(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <p className="mt-1 text-xs text-gray-700">
-                Authors should be in the format: Last, F. M.
-              </p>
-            </div>
-            <div>
-              <label>Title</label>
-              <input
-                type="text"
-                placeholder="Enter title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label>Year</label>
-              <input
-                type="text"
-                placeholder="Enter year"
-                value={year}
-                onChange={(e) => setYear(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
+        {/* Authors */}
+        <div>
+          <label className="block text-lg font-semibold text-gray-700 mb-2">
+            Authors
+          </label>
+          <input
+            type="text"
+            value={authors}
+            onChange={(e) => setAuthors(e.target.value)}
+            placeholder="e.g., Smith, J. D."
+            className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+          />
+          {errors.authors && (
+            <p className="mt-1 text-sm text-red-500">{errors.authors}</p>
+          )}
+        </div>
 
-          {/* 特定类型字段 */}
-          <div className="pt-4 border-t border-gray-200">
-            <h3 className="font-medium text-gray-900 mb-4">
-              {resourceType.charAt(0).toUpperCase() + resourceType.slice(1)} Specific Details
-            </h3>
+        {/* Title */}
+        <div>
+          <label className="block text-lg font-semibold text-gray-700 mb-2">
+            Title
+          </label>
+          <input
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Enter the title"
+            className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+          />
+          {errors.title && (
+            <p className="mt-1 text-sm text-red-500">{errors.title}</p>
+          )}
+        </div>
+
+        {/* Year */}
+        <div>
+          <label className="block text-lg font-semibold text-gray-700 mb-2">
+            Year
+          </label>
+          <input
+            type="text"
+            value={year}
+            onChange={(e) => setYear(e.target.value)}
+            placeholder="Publication year"
+            className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+          />
+          {errors.year && (
+            <p className="mt-1 text-sm text-red-500">{errors.year}</p>
+          )}
+        </div>
+
+        {/* Resource-specific fields */}
+        {resourceType === 'book' && (
+          <div>
+            <label className="block text-lg font-semibold text-gray-700 mb-2">
+              Publisher
+            </label>
+            <input
+              type="text"
+              value={additionalFields.publisher || ''}
+              onChange={(e) =>
+                setAdditionalFields({
+                  ...additionalFields,
+                  publisher: e.target.value,
+                })
+              }
+              placeholder="Publisher name"
+              className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+            />
+          </div>
+        )}
+
+        {resourceType === 'journal' && (
+          <div className="space-y-4">
             <div>
-              <label className="block text-sm text-gray-700 mb-1">
-                {getAdditionalFieldInfo().label}
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                Journal Title
               </label>
               <input
                 type="text"
-                placeholder={getAdditionalFieldInfo().placeholder}
-                value={additionalInfo}
-                onChange={(e) => setAdditionalInfo(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={additionalFields.journalTitle || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    journalTitle: e.target.value,
+                  })
+                }
+                placeholder="Journal name"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
               />
-              <p className="mt-1 text-xs text-gray-700">
-                Example: {getAdditionalFieldInfo().example}
-              </p>
+              {errors.journalTitle && (
+                <p className="mt-1 text-sm text-red-500">{errors.journalTitle}</p>
+              )}
             </div>
-            {getAdditionalFieldInfo().additionalFields?.map(field => (
-              <div key={field.name}>
-                <label className="block text-sm text-gray-700 mb-1">
-                  {field.label}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-lg font-semibold text-gray-700 mb-2">
+                  Volume
                 </label>
                 <input
                   type="text"
-                  placeholder={field.placeholder}
-                  value={additionalFields[field.name] || ''}
-                  onChange={(e) => setAdditionalFields(prev => ({
-                    ...prev,
-                    [field.name]: e.target.value
-                  }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={additionalFields.volume || ''}
+                  onChange={(e) =>
+                    setAdditionalFields({
+                      ...additionalFields,
+                      volume: e.target.value,
+                    })
+                  }
+                  placeholder="e.g., 12"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
                 />
-                <p className="mt-1 text-xs text-gray-700">
-                  Example: {field.example}
-                </p>
+              </div>
+
+              <div>
+                <label className="block text-lg font-semibold text-gray-700 mb-2">
+                  Issue
+                </label>
+                <input
+                  type="text"
+                  value={additionalFields.issue || ''}
+                  onChange={(e) =>
+                    setAdditionalFields({
+                      ...additionalFields,
+                      issue: e.target.value,
+                    })
+                  }
+                  placeholder="e.g., 3"
+                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                Pages
+              </label>
+              <input
+                type="text"
+                value={additionalFields.pages || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    pages: e.target.value,
+                  })
+                }
+                placeholder="e.g., 45-67"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              />
+            </div>
+          </div>
+        )}
+
+        {resourceType === 'website' && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                Website Name
+              </label>
+              <input
+                type="text"
+                value={additionalFields.siteName || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    siteName: e.target.value,
+                  })
+                }
+                placeholder="Website name"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              />
+            </div>
+
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                URL
+              </label>
+              <input
+                type="text"
+                value={additionalFields.url || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    url: e.target.value,
+                  })
+                }
+                placeholder="https://example.com/article"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Submit Button */}
+        <div className="flex justify-end space-x-4">
+          <button
+            type="submit"
+            className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            Generate Citation
+          </button>
+        </div>
+      </form>
+
+      {/* Generated Citation */}
+      {citation && (
+        <div className="mt-8 p-6 bg-gray-50 rounded-xl">
+          <div className="flex justify-between items-start mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Generated Citation</h3>
+            <div className="flex space-x-2">
+              <button
+                onClick={copyToClipboard}
+                className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
+              >
+                Copy
+              </button>
+              <button
+                onClick={handleSave}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+          <p className="text-gray-800 font-medium">{citation}</p>
+        </div>
+      )}
+
+      {/* Saved Citations */}
+      {savedCitations.length > 0 && (
+        <div className="mt-8">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-semibold">Saved Citations</h3>
+            <button
+              onClick={() => setShowExportDialog(true)}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Export Citations
+            </button>
+          </div>
+          <div className="space-y-4">
+            {savedCitations.map((savedCitation) => (
+              <div
+                key={savedCitation.id}
+                className="p-4 bg-white border border-gray-200 rounded-lg hover:shadow-md transition-all"
+              >
+                <div className="flex justify-between items-start">
+                  <p className="text-gray-800">{savedCitation.text}</p>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handleCopySavedCitation(savedCitation.text)}
+                      className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300"
+                      title="Copy citation"
+                    >
+                      Copy
+                    </button>
+                    <button
+                      onClick={() => handleDeleteCitation(savedCitation.id)}
+                      className="px-3 py-1 text-red-600 hover:bg-red-50 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-red-300"
+                      title="Delete citation"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+                <div className="mt-2 text-sm text-gray-500">
+                  {new Date(savedCitation.createdAt).toLocaleString()}
+                </div>
               </div>
             ))}
           </div>
+        </div>
+      )}
 
-          <button 
-            type="submit"
-            className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            Generate
-          </button>
-        </form>
-      </motion.div>
-
-      {/* Citation Preview & Export Section */}
-      <AnimatePresence>
-        {citation && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="bg-white rounded-xl shadow-sm p-6 space-y-6"
-          >
-            {/* Citation Preview */}
-            <div>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">Generated Citation</h2>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={copyToClipboard}
-                    className="inline-flex items-center px-3 py-1.5 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm"
-                  >
-                    <span className="mr-1">📋</span>
-                    Copy
-                  </button>
-                </div>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-                <p className="font-mono text-sm text-gray-900">{citation}</p>
-              </div>
-            </div>
-
-            {/* Saved Citations Section */}
-            <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-medium text-gray-900">Saved Citations</h3>
-                <div className="flex items-center space-x-2">
-                  <AnimatePresence>
-                    {duplicateMessage && (
-                      <motion.span
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="text-amber-600 text-sm bg-amber-50 px-3 py-1 rounded-lg"
-                      >
-                        {duplicateMessage}
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                  <button
-                    onClick={handleSave}
-                    className="inline-flex items-center px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm"
-                  >
-                    <span className="mr-1">💾</span>
-                    Save
-                  </button>
-                  {savedCitations.length > 0 && (
-                    <button
-                      onClick={() => setShowFormatDialog(true)}
-                      className="inline-flex items-center px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm"
-                    >
-                      <span className="mr-1">📤</span>
-                      Export
-                    </button>
-                  )}
-                </div>
-              </div>
-              
-              <div className="space-y-2">
-                {savedCitations.map((savedCitation) => (
-                  <div
-                    key={savedCitation.id}
-                    className="flex items-center justify-between p-3 bg-white rounded-lg"
-                  >
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={selectedCitations.includes(savedCitation.id)}
-                        onChange={(e) => handleCitationSelect(savedCitation.id, e.target.checked)}
-                        className="mr-3"
-                      />
-                      <span className="font-mono text-sm">{savedCitation.text}</span>
-                    </div>
-                    <button
-                      onClick={() => handleDeleteCitation(savedCitation.id)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      ✕
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Error Messages */}
-      <AnimatePresence>
-        {errors.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="bg-red-50 border-l-4 border-red-500 p-4 rounded-lg"
-          >
-            <div className="flex">
-              <div className="flex-shrink-0">⚠️</div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-900">
-                  Please correct the following errors:
-                </h3>
-                <ul className="mt-2 text-sm text-red-800 list-disc list-inside">
-                  {errors.map((error, index) => (
-                    <li key={index}>{error}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <ExportFormatDialog
-        isOpen={showFormatDialog}
-        onClose={() => setShowFormatDialog(false)}
-        onSelect={handleExport}
-      />
+      {/* Export Dialog */}
+      {showExportDialog && (
+        <ExportDialog
+          isOpen={showExportDialog}
+          onClose={() => setShowExportDialog(false)}
+          citations={savedCitations}
+        />
+      )}
     </div>
   );
 };
