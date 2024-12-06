@@ -11,7 +11,11 @@ export const metadata: Metadata = {
   title: 'Instant APA Citation Generator for 6th & 7th Editions',
   description: 'Effortlessly generate correct APA citations with our tool. Supports APA 6th & 7th editions for various source types. Start citing accurately!',
   keywords: 'APA, citation, generator, reference, academic, research',
-  icons: '/favicon.ico',
+  icons: {
+    icon: [
+      { rel: 'icon', url: '/icon.png' }
+    ]
+  },
   alternates: {
     canonical: 'https://apa-citation.com',
   },
