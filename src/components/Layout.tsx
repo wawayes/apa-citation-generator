@@ -21,7 +21,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             "name": "APA Citation Generator",
             "url": "https://apa-citation.com",
             "applicationCategory": "Academic Tool",
-            "description": "Free APA citation generator for academic papers. Supporting both APA 6th and 7th editions.",
+            "description": "Free APA citation generator for academic papers. Supporting both APA 7th editions.",
             "offers": {
               "@type": "Offer",
               "price": "0",

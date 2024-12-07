@@ -22,7 +22,7 @@ export default function Home() {
             APA Citation Generator
           </h1>
           <p className="text-xl text-gray-700 max-w-2xl mx-auto leading-relaxed mb-8">
-            Generate accurate APA citations instantly. Supporting both APA 6th and 7th editions.
+            Generate accurate APA citations instantly. Supporting both APA 7th editions.
           </p>
           {/* Add Tutorial Link */}
           <Link 
