@@ -8,49 +8,179 @@ interface CitationFormProps {
   onSave: (citation: Citation) => void;
 }
 
-const resourceTypes = [
+interface ResourceType {
+  value: string;
+  label: string;
+  icon: string;
+  description: string;
+  example: string;
+}
+
+const resourceTypes: ResourceType[] = [
   {
     value: 'book',
     label: 'Book',
     icon: '📚',
-    description: 'For printed or digital books',
+    description: 'For printed or digital books (APA 7th)',
     example: 'Smith, J. D. (2024). The Complete Guide to Citations. Publisher Name.'
   },
   {
     value: 'journal',
     label: 'Journal Article',
     icon: '📰',
-    description: 'For academic journal articles',
+    description: 'For academic journal articles (APA 7th)',
     example: 'Lee, B. R., & Wang, L. K. (2024). Modern Citation Practices. Journal Name, 12(3), 45-67.'
+  },
+  {
+    value: 'conference',
+    label: 'Conference Paper',
+    icon: '🎯',
+    description: 'For conference papers and presentations (APA 7th)',
+    example: 'Wilson, M. (2024, March). New Research Methods. Paper presented at Conference Name, Location.'
+  },
+  {
+    value: 'government',
+    label: 'Government Document',
+    icon: '📜',
+    description: 'For government reports and documents (APA 7th)',
+    example: 'Department Name. (2024). Document Title (Publication No. 123). Publisher.'
+  },
+  {
+    value: 'report',
+    label: 'Report & Technical Document',
+    icon: '📊',
+    description: 'For reports, white papers, and technical documents (APA 7th)',
+    example: 'Research Group. (2024). Technical Report Title (Report No. 123). Organization Name.'
+  },
+  {
+    value: 'dataset',
+    label: 'Dataset & Software',
+    icon: '💾',
+    description: 'For datasets, software, and applications (APA 7th)',
+    example: 'Author, A. (2024). Dataset Title [Data set]. Repository Name. https://doi.org/10.xxxx'
+  },
+  {
+    value: 'thesis',
+    label: 'Thesis & Dissertation',
+    icon: '🎓',
+    description: 'For theses, dissertations, and academic papers (APA 7th)',
+    example: 'Author, A. (2024). Title of dissertation [Doctoral dissertation, University Name].'
+  },
+  {
+    value: 'unpublished',
+    label: 'Unpublished Work',
+    icon: '📝',
+    description: 'For unpublished manuscripts, papers, and raw data (APA 7th)',
+    example: 'Author, A. (2024). Title of manuscript [Unpublished manuscript]. Department Name, Institution.'
+  },
+  {
+    value: 'multimedia',
+    label: 'Multimedia',
+    icon: '🎬',
+    description: 'For videos, audio, images, and other media (APA 7th)',
+    example: 'Creator, C. (2024). Title [Video]. Platform. https://example.com'
   },
   {
     value: 'website',
     label: 'Website',
     icon: '🌐',
-    description: 'For online articles and web pages',
+    description: 'For online articles and web pages (APA 7th)',
     example: 'Brown, A. M. (2024). Citation Guidelines. https://example.com/article'
   }
 ];
 
 interface AdditionalFields {
+  // Book fields
+  bookType?: 'printed' | 'edited' | 'chapter' | 'ebook' | 'translated';
   publisher?: string;
+  publisherLocation?: string;
+  contributorNames?: string;
+  chapterTitle?: string;
+  doi?: string;
+  translators?: string;
+  edition?: string;
+  // Journal fields
+  journalType?: 'print' | 'online-doi' | 'online-url' | 'preprint' | 'advance';
   journalTitle?: string;
   volume?: string;
   issue?: string;
   pages?: string;
+  repository?: string;
+  // Conference fields
+  conferenceType?: 'paper' | 'poster' | 'symposium' | 'proceedings';
+  conferenceName?: string;
+  conferenceLocation?: string;
+  conferenceDate?: string;
+  proceedingsTitle?: string;
+  // Government fields
+  governmentType?: 'report' | 'legislation' | 'regulation' | 'court' | 'patent';
+  department?: string;
+  publicationNumber?: string;
+  // Report fields
+  reportType?: 'technical' | 'white' | 'research' | 'standard' | 'manual' | 'working';
+  organization?: string;
+  reportNumber?: string;
+  seriesTitle?: string;
+  version?: string;
+  // Dataset fields
+  datasetType?: 'dataset' | 'software' | 'app' | 'code';
+  dataType?: string;
+  timePeriod?: string;
+  softwarePlatform?: string;
+  license?: string;
+  // Multimedia fields
+  mediaType?: 'video' | 'audio' | 'image' | 'artwork' | 'map' | 'podcast' | 'presentation';
+  mediaFormat?: string;
+  duration?: string;
+  producer?: string;
+  director?: string;
+  host?: string;
+  artist?: string;
+  channel?: string;
+  streamingPlatform?: string;
+  episodeNumber?: string;
+  seasonNumber?: string;
+  artworkMedium?: string;
+  dimensions?: string;
+  museum?: string;
+  recordLabel?: string;
+  albumTitle?: string;
+  trackNumber?: string;
+  // Thesis fields
+  thesisType?: 'doctoral' | 'masters' | 'undergraduate' | 'published';
+  institution?: string;
+  database?: string;
+  // Unpublished fields
+  unpublishedType?: 'manuscript' | 'paper' | 'report' | 'data';
+  status?: string;
+  // Website fields
+  websiteType?: 'webpage' | 'blog' | 'social' | 'news' | 'multimedia';
   url?: string;
   siteName?: string;
+  blogName?: string;
+  socialPlatform?: 'twitter' | 'facebook' | 'instagram' | 'linkedin' | 'other';
+  username?: string;
+  newsOrg?: string;
+  retrievalDate?: string;
+}
+
+interface FormErrors {
+  authors?: string;
+  title?: string;
+  year?: string;
+  journalTitle?: string;
+  [key: string]: string | undefined;
 }
 
 const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
   const [resourceType, setResourceType] = useState<string>('book');
-  const [authors, setAuthors] = useState('');
-  const [title, setTitle] = useState('');
-  const [year, setYear] = useState('');
-  const [citation, setCitation] = useState('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [authors, setAuthors] = useState<string>('');
+  const [title, setTitle] = useState<string>('');
+  const [year, setYear] = useState<string>('');
+  const [citation, setCitation] = useState<string>('');
+  const [errors, setErrors] = useState<FormErrors>({});
   const [additionalFields, setAdditionalFields] = useState<AdditionalFields>({});
-  const [showExportDialog, setShowExportDialog] = useState(false);
+  const [showExportDialog, setShowExportDialog] = useState<boolean>(false);
   const [savedCitations, setSavedCitations] = useState<Citation[]>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('savedCitations');
@@ -58,8 +188,8 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
     }
     return [];
   });
-  const [showNotification, setShowNotification] = useState(false);
-  const [notificationMessage, setNotificationMessage] = useState('');
+  const [showNotification, setShowNotification] = useState<boolean>(false);
+  const [notificationMessage, setNotificationMessage] = useState<string>('');
 
   const showToast = (message: string) => {
     setNotificationMessage(message);
@@ -67,8 +197,8 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
     setTimeout(() => setShowNotification(false), 3000);
   };
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+  const validateForm = (): boolean => {
+    const newErrors: FormErrors = {};
 
     if (!authors.trim()) {
       newErrors.authors = 'Authors are required';
@@ -82,10 +212,8 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
       newErrors.year = 'Please enter a valid year';
     }
 
-    if (resourceType === 'journal') {
-      if (!additionalFields.journalTitle?.trim()) {
-        newErrors.journalTitle = 'Journal title is required';
-      }
+    if (resourceType === 'journal' && !additionalFields.journalTitle?.trim()) {
+      newErrors.journalTitle = 'Journal title is required';
     }
 
     setErrors(newErrors);
@@ -107,59 +235,138 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
     return authorList[0];
   };
 
-  const generateCitation = (event: React.FormEvent) => {
-    event.preventDefault();
-
+  const generateCitation = () => {
     if (!validateForm()) {
       return;
     }
 
-    let apaCitation = '';
     const formattedAuthors = formatAuthors(authors);
+    let citation = '';
 
     switch (resourceType) {
       case 'book':
-        apaCitation = `${formattedAuthors} (${year}). ${title}${additionalFields.publisher ? `. ${additionalFields.publisher}` : ''}`;
+        citation = `${formattedAuthors} (${year}). ${title}`;
+        if (additionalFields.edition) {
+          citation += ` (${additionalFields.edition} ed.)`;
+        }
+        if (additionalFields.publisher) {
+          citation += `. ${additionalFields.publisher}`;
+        }
+        if (additionalFields.doi) {
+          citation += `. https://doi.org/${additionalFields.doi}`;
+        }
         break;
+
       case 'journal':
-        apaCitation = `${formattedAuthors} (${year}). ${title}. ${additionalFields.journalTitle}`;
-        if (additionalFields.volume) {
-          apaCitation += `, ${additionalFields.volume}`;
-          if (additionalFields.issue) {
-            apaCitation += `(${additionalFields.issue})`;
+        citation = `${formattedAuthors} (${year}). ${title}. `;
+        if (additionalFields.journalTitle) {
+          citation += `${additionalFields.journalTitle}`;
+          if (additionalFields.volume) {
+            citation += `, ${additionalFields.volume}`;
+            if (additionalFields.issue) {
+              citation += `(${additionalFields.issue})`;
+            }
+          }
+          if (additionalFields.pages) {
+            citation += `, ${additionalFields.pages}`;
           }
         }
-        if (additionalFields.pages) {
-          apaCitation += `, ${additionalFields.pages}`;
+        if (additionalFields.doi) {
+          citation += `. https://doi.org/${additionalFields.doi}`;
         }
-        apaCitation += '.';
         break;
+
       case 'website':
-        apaCitation = `${formattedAuthors} (${year}). ${title}`;
+        citation = `${formattedAuthors} (${year}). ${title}`;
         if (additionalFields.siteName) {
-          apaCitation += `. ${additionalFields.siteName}`;
+          citation += `. ${additionalFields.siteName}`;
         }
         if (additionalFields.url) {
-          apaCitation += `. ${additionalFields.url}`;
+          citation += `. ${additionalFields.url}`;
+        }
+        if (additionalFields.retrievalDate) {
+          citation += `. Retrieved ${new Date(additionalFields.retrievalDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`;
         }
         break;
+
+      case 'news':
+        citation = `${formattedAuthors} (${year}, ${new Date(additionalFields.retrievalDate || '').toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}). ${title}`;
+        if (additionalFields.newsOrg) {
+          citation += `. ${additionalFields.newsOrg}`;
+        }
+        if (additionalFields.url) {
+          citation += `. ${additionalFields.url}`;
+        }
+        break;
+
+      case 'dataset':
+        citation = `${formattedAuthors} (${year}). ${title} [${additionalFields.dataType || 'Data set'}]`;
+        if (additionalFields.repository) {
+          citation += `. ${additionalFields.repository}`;
+        }
+        if (additionalFields.doi) {
+          citation += `. https://doi.org/${additionalFields.doi}`;
+        }
+        break;
+
+      case 'software':
+        citation = `${formattedAuthors} (${year}). ${title} (Version ${additionalFields.version || '1.0'})`;
+        if (additionalFields.repository) {
+          citation += ` [${additionalFields.softwarePlatform || 'Software'}]. ${additionalFields.repository}`;
+        }
+        if (additionalFields.doi) {
+          citation += `. https://doi.org/${additionalFields.doi}`;
+        }
+        break;
+
+      case 'multimedia':
+        citation = `${formattedAuthors} (${year}). ${title} [${additionalFields.mediaType || 'Media'}]`;
+        if (additionalFields.streamingPlatform) {
+          citation += `. ${additionalFields.streamingPlatform}`;
+        }
+        if (additionalFields.url) {
+          citation += `. ${additionalFields.url}`;
+        }
+        break;
+
+      case 'thesis':
+        citation = `${formattedAuthors} (${year}). ${title}`;
+        if (additionalFields.thesisType) {
+          citation += ` [${additionalFields.thesisType === 'doctoral' ? 'Doctoral dissertation' : 
+                        additionalFields.thesisType === 'masters' ? 'Master\'s thesis' : 
+                        'Undergraduate thesis'}`;
+          if (additionalFields.institution) {
+            citation += `, ${additionalFields.institution}`;
+          }
+          citation += ']';
+        }
+        if (additionalFields.database) {
+          citation += `. ${additionalFields.database}`;
+        }
+        if (additionalFields.url) {
+          citation += `. ${additionalFields.url}`;
+        }
+        break;
+
+      case 'unpublished':
+        citation = `${formattedAuthors} (${year}). ${title}`;
+        if (additionalFields.unpublishedType) {
+          citation += ` [Unpublished ${additionalFields.unpublishedType}]`;
+        }
+        if (additionalFields.institution) {
+          citation += `. ${additionalFields.institution}`;
+        }
+        if (additionalFields.department) {
+          citation += `, ${additionalFields.department}`;
+        }
+        break;
+
       default:
-        apaCitation = `${formattedAuthors} (${year}). ${title}.`;
+        citation = `${formattedAuthors} (${year}). ${title}`;
+        break;
     }
 
-    setCitation(apaCitation);
-  };
-
-  const copyToClipboard = async () => {
-    if (citation) {
-      try {
-        await navigator.clipboard.writeText(citation);
-        showToast('Citation copied to clipboard');
-      } catch (error) {
-        console.error('Failed to copy citation:', error);
-        showToast('Failed to copy. Please copy manually');
-      }
-    }
+    setCitation(citation);
   };
 
   const handleSave = () => {
@@ -172,18 +379,15 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
         year,
         text: citation,
         createdAt: new Date(),
+        ...additionalFields
       };
       
       const updatedCitations = [...savedCitations, newCitation];
       setSavedCitations(updatedCitations);
       localStorage.setItem('savedCitations', JSON.stringify(updatedCitations));
       
-      // Clear form
-      setAuthors('');
-      setTitle('');
-      setYear('');
-      setCitation('');
-      setAdditionalFields({});
+      onSave(newCitation);
+      showToast('Citation saved successfully');
     }
   };
 
@@ -204,6 +408,11 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
     showToast('Citation deleted');
   };
 
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    generateCitation();
+  };
+
   return (
     <div className="space-y-8 relative">
       {/* Notification Toast */}
@@ -217,14 +426,14 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
           <span>{notificationMessage}</span>
         </div>
       </div>
-      
-      <form className="space-y-8" onSubmit={generateCitation}>
-        {/* Resource Type */}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Resource Type Selection */}
         <div className="space-y-4">
           <label className="block text-lg font-semibold text-gray-700 mb-2">
             Resource Type
           </label>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {resourceTypes.map((type) => (
               <button
                 key={type.value}
@@ -244,78 +453,58 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
           </div>
         </div>
 
-        {/* Authors */}
-        <div>
-          <label className="block text-lg font-semibold text-gray-700 mb-2">
-            Authors
-          </label>
-          <input
-            type="text"
-            value={authors}
-            onChange={(e) => setAuthors(e.target.value)}
-            placeholder="e.g., Smith, J. D."
-            className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
-          />
-          {errors.authors && (
-            <p className="mt-1 text-sm text-red-500">{errors.authors}</p>
-          )}
-        </div>
-
-        {/* Title */}
-        <div>
-          <label className="block text-lg font-semibold text-gray-700 mb-2">
-            Title
-          </label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter the title"
-            className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
-          />
-          {errors.title && (
-            <p className="mt-1 text-sm text-red-500">{errors.title}</p>
-          )}
-        </div>
-
-        {/* Year */}
-        <div>
-          <label className="block text-lg font-semibold text-gray-700 mb-2">
-            Year
-          </label>
-          <input
-            type="text"
-            value={year}
-            onChange={(e) => setYear(e.target.value)}
-            placeholder="Publication year"
-            className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
-          />
-          {errors.year && (
-            <p className="mt-1 text-sm text-red-500">{errors.year}</p>
-          )}
-        </div>
-
-        {/* Resource-specific fields */}
-        {resourceType === 'book' && (
+        {/* Basic Fields */}
+        <div className="space-y-4">
           <div>
             <label className="block text-lg font-semibold text-gray-700 mb-2">
-              Publisher
+              Authors
             </label>
             <input
               type="text"
-              value={additionalFields.publisher || ''}
-              onChange={(e) =>
-                setAdditionalFields({
-                  ...additionalFields,
-                  publisher: e.target.value,
-                })
-              }
-              placeholder="Publisher name"
+              value={authors}
+              onChange={(e) => setAuthors(e.target.value)}
+              placeholder="e.g., Smith, J. D."
               className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
             />
+            {errors.authors && (
+              <p className="mt-1 text-sm text-red-500">{errors.authors}</p>
+            )}
           </div>
-        )}
 
+          <div>
+            <label className="block text-lg font-semibold text-gray-700 mb-2">
+              Title
+            </label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter the title"
+              className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+            />
+            {errors.title && (
+              <p className="mt-1 text-sm text-red-500">{errors.title}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-lg font-semibold text-gray-700 mb-2">
+              Year
+            </label>
+            <input
+              type="text"
+              value={year}
+              onChange={(e) => setYear(e.target.value)}
+              placeholder="Publication year"
+              className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+            />
+            {errors.year && (
+              <p className="mt-1 text-sm text-red-500">{errors.year}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Resource-specific fields */}
         {resourceType === 'journal' && (
           <div className="space-y-4">
             <div>
@@ -331,7 +520,7 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
                     journalTitle: e.target.value,
                   })
                 }
-                placeholder="Journal name"
+                placeholder="Enter journal title"
                 className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
               />
               {errors.journalTitle && (
@@ -339,42 +528,40 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-lg font-semibold text-gray-700 mb-2">
-                  Volume
-                </label>
-                <input
-                  type="text"
-                  value={additionalFields.volume || ''}
-                  onChange={(e) =>
-                    setAdditionalFields({
-                      ...additionalFields,
-                      volume: e.target.value,
-                    })
-                  }
-                  placeholder="e.g., 12"
-                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
-                />
-              </div>
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                Volume
+              </label>
+              <input
+                type="text"
+                value={additionalFields.volume || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    volume: e.target.value,
+                  })
+                }
+                placeholder="e.g., 12"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              />
+            </div>
 
-              <div>
-                <label className="block text-lg font-semibold text-gray-700 mb-2">
-                  Issue
-                </label>
-                <input
-                  type="text"
-                  value={additionalFields.issue || ''}
-                  onChange={(e) =>
-                    setAdditionalFields({
-                      ...additionalFields,
-                      issue: e.target.value,
-                    })
-                  }
-                  placeholder="e.g., 3"
-                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
-                />
-              </div>
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                Issue
+              </label>
+              <input
+                type="text"
+                value={additionalFields.issue || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    issue: e.target.value,
+                  })
+                }
+                placeholder="e.g., 3"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              />
             </div>
 
             <div>
@@ -391,6 +578,82 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
                   })
                 }
                 placeholder="e.g., 45-67"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              />
+            </div>
+
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                DOI
+              </label>
+              <input
+                type="text"
+                value={additionalFields.doi || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    doi: e.target.value,
+                  })
+                }
+                placeholder="e.g., 10.xxxx/xxxxx"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              />
+            </div>
+          </div>
+        )}
+
+        {resourceType === 'book' && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                Publisher
+              </label>
+              <input
+                type="text"
+                value={additionalFields.publisher || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    publisher: e.target.value,
+                  })
+                }
+                placeholder="Enter publisher name"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              />
+            </div>
+
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                Edition
+              </label>
+              <input
+                type="text"
+                value={additionalFields.edition || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    edition: e.target.value,
+                  })
+                }
+                placeholder="e.g., 2nd"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              />
+            </div>
+
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                DOI
+              </label>
+              <input
+                type="text"
+                value={additionalFields.doi || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    doi: e.target.value,
+                  })
+                }
+                placeholder="e.g., 10.xxxx/xxxxx"
                 className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
               />
             </div>
@@ -412,7 +675,7 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
                     siteName: e.target.value,
                   })
                 }
-                placeholder="Website name"
+                placeholder="Enter website name"
                 className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
               />
             </div>
@@ -430,7 +693,361 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
                     url: e.target.value,
                   })
                 }
-                placeholder="https://example.com/article"
+                placeholder="Enter URL"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              />
+            </div>
+
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                Retrieval Date
+              </label>
+              <input
+                type="date"
+                value={additionalFields.retrievalDate || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    retrievalDate: e.target.value,
+                  })
+                }
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              />
+            </div>
+          </div>
+        )}
+
+        {resourceType === 'dataset' && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                Data Type
+              </label>
+              <input
+                type="text"
+                value={additionalFields.dataType || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    dataType: e.target.value,
+                  })
+                }
+                placeholder="e.g., Survey data"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              />
+            </div>
+
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                Repository
+              </label>
+              <input
+                type="text"
+                value={additionalFields.repository || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    repository: e.target.value,
+                  })
+                }
+                placeholder="e.g., Figshare"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              />
+            </div>
+
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                DOI
+              </label>
+              <input
+                type="text"
+                value={additionalFields.doi || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    doi: e.target.value,
+                  })
+                }
+                placeholder="e.g., 10.xxxx/xxxxx"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              />
+            </div>
+          </div>
+        )}
+
+        {resourceType === 'software' && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                Version
+              </label>
+              <input
+                type="text"
+                value={additionalFields.version || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    version: e.target.value,
+                  })
+                }
+                placeholder="e.g., 2.0.1"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              />
+            </div>
+
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                Platform
+              </label>
+              <input
+                type="text"
+                value={additionalFields.softwarePlatform || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    softwarePlatform: e.target.value,
+                  })
+                }
+                placeholder="e.g., Windows, macOS"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              />
+            </div>
+
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                Repository
+              </label>
+              <input
+                type="text"
+                value={additionalFields.repository || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    repository: e.target.value,
+                  })
+                }
+                placeholder="e.g., GitHub"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              />
+            </div>
+
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                DOI
+              </label>
+              <input
+                type="text"
+                value={additionalFields.doi || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    doi: e.target.value,
+                  })
+                }
+                placeholder="e.g., 10.xxxx/xxxxx"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              />
+            </div>
+          </div>
+        )}
+
+        {resourceType === 'multimedia' && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                Media Type
+              </label>
+              <select
+                value={additionalFields.mediaType || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    mediaType: e.target.value as 'video' | 'audio' | 'image' | 'artwork' | 'map' | 'podcast' | 'presentation',
+                  })
+                }
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              >
+                <option value="">Select media type</option>
+                <option value="Video">Video</option>
+                <option value="Audio">Audio</option>
+                <option value="Image">Image</option>
+                <option value="Podcast">Podcast</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                Platform
+              </label>
+              <input
+                type="text"
+                value={additionalFields.streamingPlatform || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    streamingPlatform: e.target.value,
+                  })
+                }
+                placeholder="e.g., YouTube, Spotify"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              />
+            </div>
+
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                URL
+              </label>
+              <input
+                type="text"
+                value={additionalFields.url || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    url: e.target.value,
+                  })
+                }
+                placeholder="Enter URL"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              />
+            </div>
+          </div>
+        )}
+
+        {resourceType === 'thesis' && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                Type
+              </label>
+              <select
+                value={additionalFields.thesisType || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    thesisType: e.target.value as 'doctoral' | 'masters' | 'undergraduate' | 'published',
+                  })
+                }
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              >
+                <option value="">Select thesis type</option>
+                <option value="doctoral">Doctoral Dissertation</option>
+                <option value="masters">Master's Thesis</option>
+                <option value="undergraduate">Undergraduate Thesis</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                Institution
+              </label>
+              <input
+                type="text"
+                value={additionalFields.institution || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    institution: e.target.value,
+                  })
+                }
+                placeholder="Enter institution name"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              />
+            </div>
+
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                Database
+              </label>
+              <input
+                type="text"
+                value={additionalFields.database || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    database: e.target.value,
+                  })
+                }
+                placeholder="e.g., ProQuest Dissertations"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              />
+            </div>
+
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                URL
+              </label>
+              <input
+                type="text"
+                value={additionalFields.url || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    url: e.target.value,
+                  })
+                }
+                placeholder="Enter URL"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              />
+            </div>
+          </div>
+        )}
+
+        {resourceType === 'unpublished' && (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                Type
+              </label>
+              <select
+                value={additionalFields.unpublishedType || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    unpublishedType: e.target.value as 'manuscript' | 'paper' | 'report' | 'data',
+                  })
+                }
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              >
+                <option value="">Select type</option>
+                <option value="manuscript">Manuscript</option>
+                <option value="paper">Conference Paper</option>
+                <option value="report">Research Report</option>
+                <option value="data">Raw Data</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                Institution
+              </label>
+              <input
+                type="text"
+                value={additionalFields.institution || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    institution: e.target.value,
+                  })
+                }
+                placeholder="Enter institution name"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
+              />
+            </div>
+
+            <div>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">
+                Department
+              </label>
+              <input
+                type="text"
+                value={additionalFields.department || ''}
+                onChange={(e) =>
+                  setAdditionalFields({
+                    ...additionalFields,
+                    department: e.target.value,
+                  })
+                }
+                placeholder="Enter department name"
                 className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 outline-none transition-all duration-300"
               />
             </div>
@@ -438,10 +1055,10 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
         )}
 
         {/* Submit Button */}
-        <div className="flex justify-end space-x-4">
+        <div className="flex justify-end">
           <button
             type="submit"
-            className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+            className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-colors"
           >
             Generate Citation
           </button>
@@ -455,7 +1072,7 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
             <h3 className="text-lg font-semibold text-gray-900">Generated Citation</h3>
             <div className="flex space-x-2">
               <button
-                onClick={copyToClipboard}
+                onClick={() => handleCopySavedCitation(citation)}
                 className="px-4 py-2 text-gray-600 hover:bg-gray-200 rounded-lg transition-colors"
               >
                 Copy
@@ -495,15 +1112,13 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
                   <div className="flex space-x-2">
                     <button
                       onClick={() => handleCopySavedCitation(savedCitation.text)}
-                      className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-gray-300"
-                      title="Copy citation"
+                      className="px-3 py-1 text-gray-600 hover:bg-gray-100 rounded transition-colors"
                     >
                       Copy
                     </button>
                     <button
                       onClick={() => handleDeleteCitation(savedCitation.id)}
-                      className="px-3 py-1 text-red-600 hover:bg-red-50 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-red-300"
-                      title="Delete citation"
+                      className="px-3 py-1 text-red-600 hover:bg-red-50 rounded transition-colors"
                     >
                       Delete
                     </button>

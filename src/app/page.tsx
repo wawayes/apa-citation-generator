@@ -68,8 +68,8 @@ export default function Home() {
             <section className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-10 hover:shadow-2xl transition-all duration-300 border border-indigo-100/50">
               <h2 className="text-3xl font-bold text-indigo-900 mb-8 border-b pb-4 border-indigo-100">APA Style Guide</h2>
               <div className="prose max-w-none prose-indigo">
-                <APAGuide />
-              </div>
+                <HomeIntro />
+          </div>
             </section>
 
             {/* About Section */}
