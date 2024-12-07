@@ -28,7 +28,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
               "priceCurrency": "USD"
             },
             "featureList": [
-              "APA 6th & 7th Edition Support",
+              "APA 7th Edition Support",
               "Multiple Citation Formats",
               "Export to Various Formats",
               "Save and Manage Citations"
