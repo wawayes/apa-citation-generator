@@ -21,16 +21,16 @@ const APAGuide: FC = () => (
           <h4 className="text-lg font-medium text-gray-700 mb-3">Common Mistakes to Avoid</h4>
           <div className="space-y-4">
             <div className="bg-red-50 p-4 rounded-lg">
-              <p className="text-red-700 font-medium mb-2">❌ Incorrect Format:</p>
+              <p className="text-red-700 font-medium mb-2">&ldquo;❌ Incorrect Format:&rdquo;</p>
               <p className="text-red-600">Smith, John. The Psychology of Learning. Routledge, 2020.</p>
-              <p className="text-green-700 font-medium mt-3 mb-2">✓ Correct Format:</p>
+              <p className="text-green-700 font-medium mt-3 mb-2">&ldquo;✓ Correct Format:&rdquo;</p>
               <p className="text-green-600">Smith, J. (2020). The psychology of learning. Routledge.</p>
             </div>
             <div className="bg-red-50 p-4 rounded-lg">
               <p className="text-red-700 font-medium mb-2">❌ Incorrect Author Format:</p>
-              <p className="text-red-600">Dr. John Smith & Professor Mary Johnson</p>
+              <p className="text-red-600">Dr. John Smith &amp; Professor Mary Johnson</p>
               <p className="text-green-700 font-medium mt-3 mb-2">✓ Correct Author Format:</p>
-              <p className="text-green-600">Smith, J., & Johnson, M.</p>
+              <p className="text-green-600">Smith, J., &amp; Johnson, M.</p>
             </div>
           </div>
         </div>

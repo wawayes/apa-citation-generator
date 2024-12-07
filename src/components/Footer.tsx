@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 const Footer = () => {
   return (
     <footer className="bg-gray-50 border-t">
@@ -13,19 +15,19 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Links</h3>
             <ul className="space-y-2">
-              <li><a href="/" className="text-gray-600 hover:text-indigo-600">Home</a></li>
-              <li><a href="/tutorials" className="text-gray-600 hover:text-indigo-600">Tutorials</a></li>
-              <li><a href="/about" className="text-gray-600 hover:text-indigo-600">About</a></li>
-              <li><a href="/contact" className="text-gray-600 hover:text-indigo-600">Contact</a></li>
+              <li><Link href="/" className="text-gray-600 hover:text-indigo-600">Home</Link></li>
+              <li><Link href="/tutorials" className="text-gray-600 hover:text-indigo-600">Tutorials</Link></li>
+              <li><Link href="/about" className="text-gray-600 hover:text-indigo-600">About</Link></li>
+              <li><Link href="/contact" className="text-gray-600 hover:text-indigo-600">Contact</Link></li>
             </ul>
           </div>
           
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Resources</h3>
             <ul className="space-y-2">
-              <li><a href="/tutorials#basics" className="text-gray-600 hover:text-indigo-600">APA Basics</a></li>
-              <li><a href="/tutorials#examples" className="text-gray-600 hover:text-indigo-600">Citation Examples</a></li>
-              <li><a href="/tutorials#faq" className="text-gray-600 hover:text-indigo-600">FAQ</a></li>
+              <li><Link href="/tutorials#basics" className="text-gray-600 hover:text-indigo-600">APA Basics</Link></li>
+              <li><Link href="/tutorials#examples" className="text-gray-600 hover:text-indigo-600">Citation Examples</Link></li>
+              <li><Link href="/tutorials#faq" className="text-gray-600 hover:text-indigo-600">FAQ</Link></li>
             </ul>
           </div>
           

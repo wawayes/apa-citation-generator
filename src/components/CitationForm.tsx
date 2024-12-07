@@ -333,7 +333,7 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
         citation = `${formattedAuthors} (${year}). ${title}`;
         if (additionalFields.thesisType) {
           citation += ` [${additionalFields.thesisType === 'doctoral' ? 'Doctoral dissertation' : 
-                        additionalFields.thesisType === 'masters' ? 'Master\'s thesis' : 
+                        additionalFields.thesisType === 'masters' ? 'Master&apos;s Thesis' : 
                         'Undergraduate thesis'}`;
           if (additionalFields.institution) {
             citation += `, ${additionalFields.institution}`;
@@ -931,7 +931,7 @@ const CitationForm: React.FC<CitationFormProps> = ({ onSave }) => {
               >
                 <option value="">Select thesis type</option>
                 <option value="doctoral">Doctoral Dissertation</option>
-                <option value="masters">Master's Thesis</option>
+                <option value="masters">Master&apos;s Thesis</option>
                 <option value="undergraduate">Undergraduate Thesis</option>
               </select>
             </div>
