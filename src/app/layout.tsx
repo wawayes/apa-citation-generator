@@ -1,3 +1,4 @@
+import Navbar from '@/components/Navbar';
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import './globals.css';
@@ -49,6 +50,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body suppressHydrationWarning>
+        <Navbar />
+        <main className="min-h-screen pt-16">
+          {children}
+        </main>
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=G-MP8Y01G06R"
           strategy="afterInteractive"
@@ -62,7 +67,6 @@ export default function RootLayout({
             gtag('config', 'G-MP8Y01G06R');
           `}
         </Script>
-        {children}
       </body>
     </html>
   );

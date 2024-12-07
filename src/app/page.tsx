@@ -3,6 +3,7 @@
 import APAGuide from '@/components/APAGuide';
 import CitationForm from '@/components/CitationForm';
 import HomeIntro from '@/components/HomeIntro';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 export default function Home() {
@@ -20,9 +21,17 @@ export default function Home() {
           <h1 className="text-6xl font-extrabold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 animate-gradient">
             APA Citation Generator
           </h1>
-          <p className="text-xl text-gray-700 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl text-gray-700 max-w-2xl mx-auto leading-relaxed mb-8">
             Generate accurate APA citations instantly. Supporting both APA 6th and 7th editions.
           </p>
+          {/* Add Tutorial Link */}
+          <Link 
+            href="/tutorials"
+            className="inline-flex items-center px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+          >
+            <span className="mr-2">📚</span>
+            View APA Tutorials
+          </Link>
         </header>
 
         {isClient && (
@@ -32,6 +41,27 @@ export default function Home() {
               <CitationForm onSave={(citation) => {
                 console.log('Citation saved:', citation);
               }} />
+            </section>
+
+            {/* Quick Links to Tutorials */}
+            <section className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl p-10 hover:shadow-2xl transition-all duration-300 border border-indigo-100/50">
+              <h2 className="text-3xl font-bold text-indigo-900 mb-8">Learn APA Format</h2>
+              <div className="grid md:grid-cols-2 gap-6">
+                <Link 
+                  href="/tutorials/apa-basics"
+                  className="block p-6 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition-colors"
+                >
+                  <h3 className="text-xl font-semibold mb-2">APA Format Basics →</h3>
+                  <p className="text-gray-600">Learn the fundamental rules and principles</p>
+                </Link>
+                <Link 
+                  href="/tutorials/citation-types"
+                  className="block p-6 bg-indigo-50 rounded-xl hover:bg-indigo-100 transition-colors"
+                >
+                  <h3 className="text-xl font-semibold mb-2">Citation Types →</h3>
+                  <p className="text-gray-600">How to cite different source types</p>
+                </Link>
+              </div>
             </section>
 
             {/* APA Guide Section */}
